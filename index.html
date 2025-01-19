@@ -1,0 +1,49 @@
+# templates/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF OCR Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+        }
+        .upload-form {
+            margin: 20px;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+        }
+        .instructions {
+            margin: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF OCR Tool</h1>
+        <div class="instructions">
+            <h2>Instructions:</h2>
+            <ol>
+                <li>Select a PDF file to upload (max 16MB)</li>
+                <li>Click "Upload and Extract Text"</li>
+                <li>Wait for processing</li>
+                <li>Download the extracted text file</li>
+            </ol>
+        </div>
+        <div class="upload-form">
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".pdf" required>
+                <br><br>
+                <input type="submit" value="Upload and Extract Text">
+            </form>
+        </div>
+    </div>
+</body>
+</html>
