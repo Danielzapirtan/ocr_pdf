@@ -8,7 +8,7 @@ from PIL import Image
 import tempfile
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024  # 16MB max file size
 
 # Create uploads folder if it doesn't exist
