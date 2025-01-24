@@ -22,6 +22,39 @@
             margin: 20px;
             text-align: left;
         }
+        #status-message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        #timer {
+            color: #666;
+            margin-top: 10px;
+        }
+        #progress-bar {
+            width: 0%;
+            height: 5px;
+            background-color: #4CAF50;
+            transition: width 0.5s ease;
+            margin: 10px auto;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(0,0,0,0.3);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 1s ease-in-out infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #download-link {
+            display: none;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -37,12 +70,104 @@
             </ol>
         </div>
         <div class="upload-form">
-            <form action="/upload" method="post" enctype="multipart/form-data">
-                <input type="file" name="file" accept=".pdf" required>
+            <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" id="file-input" name="file" accept=".pdf" required>
                 <br><br>
-                <input type="submit" value="Upload and Extract Text">
+                <input type="submit" value="Upload and Extract Text" id="submit-btn">
             </form>
+            
+            <div id="progress-bar"></div>
+            <div id="status-message"></div>
+            <div id="timer"></div>
+            <a href="#" id="download-link" download>Download Extracted Text</a>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('upload-form');
+            const fileInput = document.getElementById('file-input');
+            const submitBtn = document.getElementById('submit-btn');
+            const statusMessage = document.getElementById('status-message');
+            const timerElement = document.getElementById('timer');
+            const progressBar = document.getElementById('progress-bar');
+            const downloadLink = document.getElementById('download-link');
+
+            let startTime;
+            let timerInterval;
+
+            function startTimer() {
+                startTime = Date.now();
+                timerInterval = setInterval(() => {
+                    const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                    timerElement.textContent = `Processing time: ${elapsedTime} seconds`;
+                }, 1000);
+            }
+
+            function stopTimer() {
+                clearInterval(timerInterval);
+            }
+
+            function showSpinner() {
+                const spinner = document.createElement('div');
+                spinner.classList.add('loading-spinner');
+                statusMessage.innerHTML = '';
+                statusMessage.appendChild(spinner);
+            }
+
+            function updateProgressBar(percentage) {
+                progressBar.style.width = `${percentage}%`;
+            }
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                if (!fileInput.files.length) {
+                    statusMessage.textContent = 'Please select a PDF file';
+                    return;
+                }
+
+                const formData = new FormData(form);
+                
+                showSpinner();
+                startTimer();
+                submitBtn.disabled = true;
+                updateProgressBar(20);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    updateProgressBar(60);
+                    if (!response.ok) {
+                        throw new Error('Upload failed');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    updateProgressBar(80);
+                    stopTimer();
+                    statusMessage.textContent = 'Processing complete!';
+                    
+                    const url = window.URL.createObjectURL(blob);
+                    downloadLink.href = url;
+                    downloadLink.textContent = 'Download Extracted Text';
+                    downloadLink.style.display = 'block';
+                    
+                    updateProgressBar(100);
+                })
+                .catch(error => {
+                    stopTimer();
+                    statusMessage.textContent = `Error: ${error.message}`;
+                    submitBtn.disabled = false;
+                    updateProgressBar(0);
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                });
+            });
+        });
+    </script>
 </body>
 </html>
