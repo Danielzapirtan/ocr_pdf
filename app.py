@@ -61,8 +61,8 @@ def process_pdf(file):
 # Gradio Interface
 iface = gr.Interface(
     fn=process_pdf,
-    inputs=gr.inputs.File(label="Upload PDF"),
-    outputs=gr.outputs.File(label="Download Extracted Text"),
+    inputs=gr.File(label="Upload PDF"),  # Use gr.File for file upload
+    outputs=gr.File(label="Download Extracted Text"),  # Use gr.File for file download
     title="PDF Text Extractor",
     description="Upload a PDF file to extract text from it. The extracted text will be available for download as a .txt file."
 )
