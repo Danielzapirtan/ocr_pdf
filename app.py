@@ -1,18 +1,10 @@
-# app.py
-from flask import Flask, render_template, request, send_file
+import gradio as gr
 import os
 import PyPDF2
 import pytesseract
 from pdf2image import convert_from_path
 from PIL import Image
 import tempfile
-
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024  # 16MB max file size
-
-# Create uploads folder if it doesn't exist
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'pdf'
@@ -39,26 +31,15 @@ def extract_text_from_pdf(pdf_path):
     
     return '\n'.join(text)
 
-@app.route('/', methods=['GET'])
-def index():
-    return render_template('index.html')
-
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return 'No file uploaded', 400
-    
-    file = request.files['file']
-    if file.filename == '':
-        return 'No file selected', 400
-    
-    if not allowed_file(file.filename):
-        return 'Invalid file type. Please upload a PDF.', 400
+def process_pdf(file):
+    if not allowed_file(file.name):
+        return 'Invalid file type. Please upload a PDF.'
     
     # Save uploaded file
     temp_dir = tempfile.mkdtemp()
     pdf_path = os.path.join(temp_dir, 'input.pdf')
-    file.save(pdf_path)
+    with open(pdf_path, 'wb') as f:
+        f.write(file.read())
     
     try:
         # Extract text from PDF
@@ -70,18 +51,21 @@ def upload_file():
             f.write(extracted_text)
         
         # Return the text file
-        return send_file(
-            output_path,
-            as_attachment=True,
-            download_name='extracted_text.txt',
-            mimetype='text/plain'
-        )
+        return output_path
     
     finally:
         # Clean up temporary files
         import shutil
         shutil.rmtree(temp_dir)
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5030, debug=True)
+# Gradio Interface
+iface = gr.Interface(
+    fn=process_pdf,
+    inputs=gr.inputs.File(label="Upload PDF"),
+    outputs=gr.outputs.File(label="Download Extracted Text"),
+    title="PDF Text Extractor",
+    description="Upload a PDF file to extract text from it. The extracted text will be available for download as a .txt file."
+)
 
+# Launch the Gradio app
+iface.launch(debug=True)
