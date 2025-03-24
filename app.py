@@ -3,7 +3,6 @@ import os
 import PyPDF2
 import pytesseract
 from pdf2image import convert_from_path
-from PIL import Image
 import tempfile
 
 def allowed_file(filename):
@@ -38,8 +37,11 @@ def process_pdf(file):
     # Save uploaded file
     temp_dir = tempfile.mkdtemp()
     pdf_path = os.path.join(temp_dir, 'input.pdf')
-    with open(pdf_path, 'wb') as f:
-        f.write(file.read())
+    
+    # Copy the uploaded file to the temporary directory
+    with open(file.name, 'rb') as uploaded_file:
+        with open(pdf_path, 'wb') as temp_file:
+            temp_file.write(uploaded_file.read())
     
     try:
         # Extract text from PDF
@@ -54,9 +56,8 @@ def process_pdf(file):
         return output_path
     
     finally:
-        # Clean up temporary files
-        import shutil
-        shutil.rmtree(temp_dir)
+        # Clean up temporary files (except the output file, which Gradio will handle)
+        pass
 
 # Gradio Interface
 iface = gr.Interface(
