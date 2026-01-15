@@ -161,18 +161,4 @@ def upload_file():
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    # Run with ngrok integration for Colab
-    try:
-        from google.colab.output import eval_js
-        print("Running in Google Colab - starting with pyngrok...")
-        from pyngrok import ngrok
-        
-        # Set up ngrok tunnel
-        public_url = ngrok.connect(5000)
-        print(f"\n🌐 Your app is publicly available at: {public_url}\n")
-        
-        app.run(port=5000)
-    except ImportError:
-        # Not in Colab, run normally
-        print("Running locally at http://127.0.0.1:5000")
-        app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000)
